@@ -30,7 +30,10 @@ JOIN
 GROUP BY
     oi.seller_id
 HAVING
-    first_order_date >= date('now', '-30 years')
+    first_order_date >= (
+      SELECT DATE(MAX(order_purchase_timestamp), '-3 months')
+      FROM orders
+    )
     AND total_items_sold > 30;
 
 
@@ -42,7 +45,9 @@ WITH recent_reviews AS (
   FROM order_reviews or2
   JOIN orders o on or2.order_id = o.order_id
   JOIN customers c on o.customer_id = c.customer_id
-  WHERE o.order_purchase_timestamp >= DATE('now', '-12 years') -- Il n'ya aucun resultat pour les 12 derniers moi donc on a remplacé par année.
+  WHERE o.order_purchase_timestamp >= (
+    SELECT DATE(MAX(order_purchase_timestamp), '-12 months') FROM orders
+  )
 ),
 reviews_stats AS (
   SELECT zip_code, COUNT(*) as nbre_review, AVG(review_score) as score_moyen
